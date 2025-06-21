@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group = 'com.rest'
+version = ''
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+}
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+war {
+    webXml = file('src/main/webapp/WEB-INF/web.xml')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('copyWAR' , Copy ){
+    from "${rootDir}/build/libs/${rootProject.name}.war"
+    into "${rootDir}/tomcat/apache-tomcat-10.1.42/webapps"
+}
+tasks.register('startServer' , Exec){
+    commandLine "chmod" , "+x" , "${rootDir}/tomcat/apache-tomcat-10.1.42/bin/catalina.sh"
+    commandLine 'sh', "${rootDir}/tomcat/apache-tomcat-10.1.42/bin/startup.sh"
+}
+
+tasks.register('genBuild' , Exec ){
+    commandLine "${rootDir}/gradlew" , "clean" , "war"
+}
+
+tasks.register('runServer' ){
+    dependsOn 'genBuild' , 'copyWAR' ,'startServer'
+}
